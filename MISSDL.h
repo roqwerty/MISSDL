@@ -7,6 +7,7 @@
 /*
 The goal of this header - MISSDL (Mutable Input System for SDL2) - is to provide a simple abstraction layer for dynamically changeable keybinds in SDL2.
 PLANNED FEATURES:
+    A user-defined way to handle spillover events
     A callback-based lambda system for the keyboard and mouse and joystick/gamepad events that is somewhat UNIFIED.
     Add some way for auto-repeat to be overriden
         Like, store whether or not it has been "released" and only re-call if it has previously been released
@@ -65,10 +66,13 @@ public:
     bool doEvents(); // Handles all event callbacks that are a part of this header. NOTE Purges all events. Use as only event handling. If returns true, quit program
     void addKeyCallback(SDL_Keycode key, bool onDown, std::function<void()> function); // Adds a lambda keycallback function
     void addMouseButtonCallback(uint8_t button, bool onDown, std::function<void()> function); // Adds a lambda mousebuttoncallback function
+    void setOverflowFunction(std::function<void(SDL_Event)> function); // Sets the overflow function, accepts SDL_event
     // Variables
 private:
     // Functions
     // Variables
+    std::function<void(SDL_Event)> overflowFunction; // What to pass an event to if it's not handled here
+    bool overflowSet = false;
     std::set<MISSDL_KeyCallback*> keyCallbacks;
     std::set<MISSDL_MouseButtonCallback*> mouseButtonCallbacks;
 };
@@ -138,6 +142,8 @@ bool MISSDL::doEvents() {
                     }
                 }
             }
+        } else if (overflowSet) {
+            overflowFunction(e);
         }
     }
     return false;
@@ -161,4 +167,10 @@ void MISSDL::addMouseButtonCallback(uint8_t button, bool onDown, std::function<v
     call->onDown = onDown;
     call->function = function;
     mouseButtonCallbacks.insert(call);
+}
+
+void MISSDL::setOverflowFunction(std::function<void(SDL_Event)> function) {
+    // Sets the overflow function, accepts SDL_event
+    overflowFunction = function;
+    overflowSet = true;
 }
