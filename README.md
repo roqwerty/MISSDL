@@ -18,6 +18,14 @@ missdl.addMouseButtonCallback(SDL_BUTTON_LEFT, true, [](){
 missdl.addMouseButtonCallback(SDL_BUTTON_LEFT, false, [](){
     std::cout << "Left button released!" << std::endl;
 });
+// Any other callbacks
+missdl.setOverflowFunction([](SDL_Event e){
+    if (e.type == SDL_MOUSEWHEEL) {
+        if (e.wheel.y > 0) {
+            std::cout << "Scrolled up!" << std::endl;
+        }
+    }
+});
 
 // Main loop
 bool quit = false;
